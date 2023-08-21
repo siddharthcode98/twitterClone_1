@@ -1,0 +1,29 @@
+### API 6
+
+#### Path: `/tweets/:tweetId/`
+
+#### Method: `GET`
+
+`SELECT DISTINCT 
+tweet AS tweet,
+(SELECT SUM(like)AS likes FROM like WHERE tweet.tweetId=${tweetId}) AS likes,
+(SELECT SUM(reply.reply_id)AS replies FROM reply WHERE tweet.tweetId=${tweetId}) AS replies
+FROM user INNER JOIN tweet ON user.user_id=tweet.user_id 
+INNER JOIN follower ON follower.follower_user_id=user.user_id 
+WHERE 
+user.user_id IN (SELECT following_user_id FROM follower WHERE follower_user_id=1) 
+AND tweet.tweet_id=${tweetId};`
+
+
+
+### API 7
+
+#### Path: `/tweets/:tweetId/likes/`
+
+#### Method: `GET`
+
+`SELECT username FROM user 
+WHERE 
+user_id IN (SELECT user_id FROM like WHERE tweet_id=1) 
+AND user_id 
+IN(SELECT following_user_id FROM follower WHERE follower_user_id=1);`
