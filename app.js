@@ -222,14 +222,24 @@ app.get("/user/tweets/", authorizationToken, async (request, response) => {
   const { username } = request;
   const getUserIdQuery = `SELECT user_id FROM user WHERE username='${username}';`;
   const getUserId = await db.get(getUserIdQuery);
-  const getAllTweetsOfUserQuery = `SELECT tweet.tweet, 
-  COUNT(DISTINCT like.like_id) AS likes,
-  COUNT(DISTINCT reply.reply_id)AS replies,
-  tweet.date_time AS dateTime 
-  FROM (tweet INNER JOIN like ON like.tweet_id=tweet.tweet_id)AS t1 
-  INNER JOIN reply ON t1.tweet_id=reply.tweet_id WHERE t1.user_id=2 
-  GROUP BY tweet.tweet_id;`;
-  const getAllTweetsOfUser = await db.all(getAllTweetsOfUserQuery);
+  const tweetsQuery = `
+SELECT
+tweet,
+(
+SELECT COUNT(like_id)
+FROM like
+WHERE tweet_id=tweet.tweet_id
+) AS likes,
+(
+SELECT COUNT(reply_id)
+FROM reply
+WHERE tweet_id=tweet.tweet_id
+) AS replies,
+date_time AS dateTime
+FROM tweet
+WHERE user_id= ${getUserId.user_id}
+`;
+  const getAllTweetsOfUser = await db.all(tweetsQuery);
   response.send(getAllTweetsOfUser);
 });
 //API 10
